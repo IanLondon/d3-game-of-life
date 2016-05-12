@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Game of Life</title>
+  </head>
+
+  <body>
+    <button id='go_button'>Go!</button>
+    <button id='stop_button'>Stop</button>
+    <em>Game of Life in D3.js by Ian London 2016 - see the source on <a href="https://www.github.com/IanLondon/d3-game-of-life">GitHub</a></em>
+    <div id='draw'></div>
+
+    <!-- Import the libraries: jQuery, d3, d3.slider -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+
+    <script>
+
+    var current_board = [
+        [1,0,0,0,1,1,0,1,1,1,0],
+        [1,0,0,0,1,0,0,1,0,1,0],
+        [1,0,1,0,1,1,0,1,0,1,0],
+        [1,0,0,0,0,1,0,1,0,1,0],
+        [1,0,0,0,1,1,0,1,0,1,0],
+        [1,0,0,0,1,1,0,1,0,1,0],
+        [1,0,0,0,1,0,1,0,1,0,1],
+        [1,0,1,0,1,1,0,1,0,1,0]
+    ];
+
+    var run_interval;
+    var REFRESH_DELAY = 100;
+
+    var sq_size = 40;
+    var sq_margin = 5;
+
+    var svg = d3.select("#draw")
+                    .insert("svg")
+                    .attr("width", 500)
+                    .attr("height", 500);
+
+    colorScale = d3.scale.category20();
+    function render(dataset) {
+        svg.append("g")
+          .selectAll("g")
+          .data(dataset)
+          .enter()
+          .append("g")
+          .selectAll("rect")
+          .data( function(d,i,j) { return d; } )
+          .enter()
+          .append("rect")
+          .attr("x", function(d,i,j) { return i * (sq_margin + sq_size); })
+          .attr("y", function(d,i,j) { return j * (sq_margin + sq_size); })
+          .attr('width', sq_size)
+          .attr('height', sq_size)
+          .attr('fill', function(d,i,j) { return colorScale(d);} )
+          .on('click', function(d,i,j){
+              // update the dataset
+              // bitwise flip: 1 to 0, 0 to 1.
+              dataset[j][i] ^= 1;
+              render(dataset);
+          })
+      }
+
+      function next_board(){
+          $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            dataType: 'json',
+            url: "/score",
+            data: JSON.stringify({board: current_board}),
+            success: function(res) {
+                current_board = res.board;
+                render(current_board);
+            },
+            error: function(err) {console.log('ajax failed', err);}
+        });
+    }
+
+    $("#go_button").click(function(){
+        // make ajax request and update every second
+        run_interval = setInterval(next_board, REFRESH_DELAY);
+    });
+
+    $("#stop_button").click(function(){
+        clearInterval(run_interval);
+    })
+
+    // initial render
+    render(current_board);
+
+    </script>
+  </body>
+</html>
