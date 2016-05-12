@@ -1,6 +1,7 @@
 # Conway's Game of Life
 
-D3.js frontend.
-Flask backend.
+A simple Flask + D3.js implementation of Conway's Game of Life.
 
-* Ian London 2016
+![Game of Life screenshot](screenshot.png)
+
+*Ian London 2016*
